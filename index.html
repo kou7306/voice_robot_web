@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ROS Topic Subscriber</title>
+  </head>
+  <body>
+    <h1>ROS Topic Message:</h1>
+    <p id="message"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/roslib@0.22.1/dist/roslib.min.js"></script>
+    <script>
+      const ros = new ROSLIB.Ros({
+        url: "ws://localhost:9090",
+      });
+
+      ros.on("connection", function () {
+        console.log("Connected to ROS");
+      });
+
+      ros.on("error", function (error) {
+        console.error("Error connecting to ROS:", error);
+      });
+
+      ros.on("close", function () {
+        console.log("Disconnected from ROS");
+      });
+
+      const listener = new ROSLIB.Topic({
+        ros: ros,
+        name: "/cmd_vel",
+        messageType: "std_msgs/String",
+      });
+
+      listener.subscribe(function (msg) {
+        document.getElementById("message").innerText = msg.data;
+      });
+    </script>
+  </body>
+</html>
