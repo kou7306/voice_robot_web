@@ -1,0 +1,5 @@
+Flask
+flask-socketio
+flask-cors
+eventlet==0.31.0 
+gunicorn
