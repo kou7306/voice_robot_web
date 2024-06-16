@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>マイク入力のリアルタイム可視化</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+      <h1 class="text-3xl font-bold mb-4 text-center">
+        マイク入力の可視化(いい感じのタイトルにあとで変更)
+      </h1>
+      <div class="flex justify-center mb-4">
+        <canvas
+          id="waveform"
+          class="w-full h-96 bg-white rounded shadow"
+        ></canvas>
+      </div>
+      <div class="text-center mb-4">
+        <div class="inline-flex items-center">
+          <span class="text-2xl font-bold mr-2">　音量:</span>
+          <span id="volume" class="text-4xl w-20 text-right">0</span>
+          <span class="text-2xl font-bold ml-1">dB</span>
+        </div>
+        <br />
+        <div class="inline-flex items-center mt-2">
+          <span class="text-2xl font-bold mr-2">周波数:</span>
+          <span id="frequency" class="text-4xl w-20 text-right">0</span>
+          <span class="text-2xl font-bold ml-1">Hz</span>
+        </div>
+      </div>
+      <div class="text-center mb-4">
+        <p class="font-bold">
+          !!!DEBUG!!!マイクの状態: <span id="micStatus"></span>
+        </p>
+        <p class="font-bold">
+          !!!DEBUG!!!オーディオコンテキストの状態:
+          <span id="audioContextState"></span>
+        </p>
+        <p class="font-bold">
+          !!!DEBUG!!!解析ノードの状態: <span id="analyserState"></span>
+        </p>
+      </div>
+      <div class="text-center">
+        <button
+          id="startButton"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        >
+          Start
+        </button>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+      let audioContext;
+      let analyser;
+
+      const startButton = document.getElementById("startButton");
+      const canvas = document.getElementById("waveform");
+      const canvasContext = canvas.getContext("2d");
+      const volumeDisplay = document.getElementById("volume");
+      const frequencyDisplay = document.getElementById("frequency");
+      const micStatusDisplay = document.getElementById("micStatus");
+      const audioContextStateDisplay =
+        document.getElementById("audioContextState");
+      const analyserStateDisplay = document.getElementById("analyserState");
+      const socket = io("https://apparent-raccoon-close.ngrok-free.app");
+
+      socket.on("connect", () => {
+        console.log("connect");
+      });
+      startButton.addEventListener("click", startAudioVisualizer);
+
+      // 接続が確立されたときに呼び出されるイベント
+      socket.io.on("connect", function () {
+        console.log("Connected to server");
+        socket.emit("server_echo", { data: "client connected!" });
+      });
+
+      // サーバーからのメッセージを受信したときに呼び出されるイベント
+      socket.on("broadcast_audio_data", function (data) {
+        console.log("Received from server:", data);
+      });
+
+      function startAudioVisualizer() {
+        startButton.disabled = true;
+
+        audioContext = new AudioContext();
+        analyser = audioContext.createAnalyser();
+
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            micStatusDisplay.textContent = "マイクに接続されました";
+            console.log("マイクに接続されました");
+
+            const microphone = audioContext.createMediaStreamSource(stream);
+            microphone.connect(analyser);
+            analyser.fftSize = 2048;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+              canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+              analyser.getByteTimeDomainData(dataArray);
+
+              canvasContext.lineWidth = 2;
+              canvasContext.strokeStyle = "rgb(0, 0, 0)";
+              canvasContext.beginPath();
+
+              const sliceWidth = (canvas.width * 1.0) / bufferLength;
+              let x = 0;
+
+              for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = (v * canvas.height) / 2;
+
+                if (i === 0) {
+                  canvasContext.moveTo(x, y);
+                } else {
+                  canvasContext.lineTo(x, y);
+                }
+
+                x += sliceWidth;
+              }
+
+              canvasContext.lineTo(canvas.width, canvas.height / 2);
+              canvasContext.stroke();
+
+              const volume = Math.max(...dataArray) - 128;
+              volumeDisplay.textContent = volume.toFixed(0);
+              // console.log("音量:", volume);
+
+              analyser.getByteFrequencyData(dataArray);
+              const frequency = dataArray.indexOf(Math.max(...dataArray));
+              frequencyDisplay.textContent = frequency;
+              // console.log("周波数:", frequency);
+
+              sendAudioData(volume, frequency);
+
+              audioContextStateDisplay.textContent = audioContext.state;
+              analyserStateDisplay.textContent =
+                analyser.numberOfInputs > 0 ? "Connected" : "Disconnected";
+
+              requestAnimationFrame(draw);
+            }
+
+            draw();
+          })
+          .catch((error) => {
+            console.error("マイクへのアクセスが拒否されました:", error);
+            micStatusDisplay.textContent = "マイクへのアクセスが拒否されました";
+            startButton.disabled = false;
+          });
+      }
+
+      function sendAudioData(volume, frequency) {
+        const data = {
+          volume: volume,
+          frequency: frequency,
+        };
+        socket.emit("audio_data", data);
+      }
+    </script>
+  </body>
+</html>
