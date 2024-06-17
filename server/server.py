@@ -26,7 +26,7 @@ while True:
         receive_message()
 
         # 10秒待機
-        time.sleep(1)
+        time.sleep()
     except KeyboardInterrupt:
         # Ctrl+Cが押されたらループを抜ける
         break

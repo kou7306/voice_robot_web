@@ -12,6 +12,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", max_http_buffer_size=1000000)
 CORS(app, supports_credentials=True, responses={r"/*": {"origins": "*"}})
 buffer_size = 60  # バッファサイズ
 audio_buffer = []  # 音声データのバッファ
+new_data_count = 0  # 新しいデータのカウンタ
 
 @app.route('/')
 def index():
@@ -21,11 +22,17 @@ def index():
 @socketio.on('connect')
 def handle_connect():
     print(f'connect: {request.sid}')
-    # 接続されたクライアントにメッセージを送信
+    # 接続されたクライアントにメッセージを送信s
 
 
 async def send_data_to_server(data):
-    uri = "ws://localhost:8765"
+    uri = "wss://apparent-raccoon-close.ngrok-free.app/socket.io"
+    if not audio_buffer:
+        return jsonify({'volume': 0, 'frequency': 0})
+    # # バッファ内のデータの平均値を計算
+    # volume_avg = np.mean([data['volume'] for data in audio_buffer])
+    # frequency_avg = np.mean([data['frequency'] for data in audio_buffer])
+    # data = {'volume': volume_avg, 'frequency': frequency_avg}
     async with websockets.connect(uri) as websocket:
         await websocket.send(json.dumps(data))
         message = await websocket.recv()
@@ -37,25 +44,30 @@ def handle_message(audio_data):
     global audio_buffer
     # バッファに新しいデータを追加
     audio_buffer.append(audio_data)
+    
+
     # バッファサイズを超えたら古いデータを削除
     if len(audio_buffer) > buffer_size:
         audio_buffer.pop(0)
     
-    print(audio_data)
     # 受け取ったデータを接続されている全てのクライアントにブロードキャスト
     emit('broadcast_audio_data', audio_data, broadcast=True)
-       # 別のサーバーにデータを送信
-    asyncio.run(send_data_to_server(audio_data))
 
-@app.route('/get_data', methods=['GET'])
-def get_data():
-    global audio_buffer
-    if not audio_buffer:
-        return jsonify({'volume': 0, 'frequency': 0})
-    # バッファ内のデータの平均値を計算
-    volume_avg = np.mean([data['volume'] for data in audio_buffer])
-    frequency_avg = np.mean([data['frequency'] for data in audio_buffer])
-    return jsonify({'volume': volume_avg, 'frequency': frequency_avg})
+    
+    print("Sending data to server")
+    asyncio.run(send_data_to_server(audio_buffer))
+
+
+
+# @app.route('/get_data', methods=['GET'])
+# def get_data():
+#     global audio_buffer
+#     if not audio_buffer:
+#         return jsonify({'volume': 0, 'frequency': 0})
+#     # バッファ内のデータの平均値を計算
+#     volume_avg = np.mean([data['volume'] for data in audio_buffer])
+#     frequency_avg = np.mean([data['frequency'] for data in audio_buffer])
+#     return jsonify({'volume': volume_avg, 'frequency': frequency_avg})
 
 
 if __name__ == '__main__':
