@@ -5,6 +5,8 @@ import numpy as np
 import asyncio
 import websockets
 import json
+from threading import Thread
+import time
 
 app = Flask(__name__, static_folder='static', static_url_path='/')
 app.config['SECRET_KEY'] = 'secret!'
@@ -12,7 +14,8 @@ socketio = SocketIO(app, cors_allowed_origins="*", max_http_buffer_size=1000000)
 CORS(app, supports_credentials=True, responses={r"/*": {"origins": "*"}})
 buffer_size = 60  # バッファサイズ
 audio_buffer = []  # 音声データのバッファ
-new_data_count = 0  # 新しいデータのカウンタ
+data_count = 0
+
 
 @app.route('/')
 def index():
@@ -27,50 +30,45 @@ def handle_connect():
 
 async def send_data_to_server(data):
     uri = "wss://apparent-raccoon-close.ngrok-free.app/socket.io"
+    
     if not audio_buffer:
         return jsonify({'volume': 0, 'frequency': 0})
     # # バッファ内のデータの平均値を計算
-    # volume_avg = np.mean([data['volume'] for data in audio_buffer])
-    # frequency_avg = np.mean([data['frequency'] for data in audio_buffer])
-    # data = {'volume': volume_avg, 'frequency': frequency_avg}
+    volume_avg = np.mean([data['volume'] for data in audio_buffer])
+    frequency_avg = np.mean([data['frequency'] for data in audio_buffer])
+    data = {'volume': volume_avg, 'frequency': frequency_avg}
     async with websockets.connect(uri) as websocket:
+        
         await websocket.send(json.dumps(data))
-        message = await websocket.recv()
-        print(f"Received: {message}")
+
 
 
 @socketio.on('audio_data')
 def handle_message(audio_data):
-    global audio_buffer
-    # バッファに新しいデータを追加
+    print(f'audio_data: {audio_data}')
+    global audio_buffer, data_count
+
+     # バッファに新しいデータを追加
     audio_buffer.append(audio_data)
+    data_count += 1
     
 
     # バッファサイズを超えたら古いデータを削除
     if len(audio_buffer) > buffer_size:
         audio_buffer.pop(0)
-    
+
     # 受け取ったデータを接続されている全てのクライアントにブロードキャスト
     emit('broadcast_audio_data', audio_data, broadcast=True)
 
+    if data_count >= 60:
+        data_count = 0
+        asyncio.run(send_data_to_server(audio_buffer))
+        
+
+
+
     
-    print("Sending data to server")
-    asyncio.run(send_data_to_server(audio_buffer))
-
-
-
-# @app.route('/get_data', methods=['GET'])
-# def get_data():
-#     global audio_buffer
-#     if not audio_buffer:
-#         return jsonify({'volume': 0, 'frequency': 0})
-#     # バッファ内のデータの平均値を計算
-#     volume_avg = np.mean([data['volume'] for data in audio_buffer])
-#     frequency_avg = np.mean([data['frequency'] for data in audio_buffer])
-#     return jsonify({'volume': volume_avg, 'frequency': frequency_avg})
-
-
 if __name__ == '__main__':
-    socketio.run(app,host='0.0.0.0', port=5002)
+    socketio.run(app,host='0.0.0.0', port=8080)
     
 # ngrok http --domain=apparent-raccoon-close.ngrok-free.app 5002
