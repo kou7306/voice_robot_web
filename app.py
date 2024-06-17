@@ -25,7 +25,6 @@ def index():
 @socketio.on('connect')
 def handle_connect():
     print(f'connect: {request.sid}')
-    # 接続されたクライアントにメッセージを送信s
 
 
 async def send_data_to_server(data,url):
