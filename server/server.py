@@ -1,20 +1,35 @@
-import requests
+import websocket
 import time
+import json
 
-# APIのエンドポイント
-url = 'https://apparent-raccoon-close.ngrok-free.app/get_data'
+url = "wss://apparent-raccoon-close.ngrok-free.app/get_data"
 
-# ループを使用してAPIを定期的にリクエスト
+# WebSocket接続
+ws = websocket.create_connection(url)
+
+# メッセージ送信関数
+def send_message(message):
+    ws.send(json.dumps(message))
+
+# メッセージ受信関数
+def receive_message():
+    result = ws.recv()
+    print("Received:", result)
+
+# 定期的なリクエスト
 while True:
-    # GETリクエストを送信
-    response = requests.get(url)
+    try:
+        # リクエストを送信
+        send_message({"command": "get_data"})
 
-    # レスポンスを取得
-    if response.status_code == 200:
-        data = response.json()
-        print(data)
-    else:
-        print('Failed to fetch data:', response.status_code)
+        # レスポンスを受信
+        receive_message()
 
-    # 10秒待機してから次のリクエストを送信
-    time.sleep(1)
+        # 10秒待機
+        time.sleep(1)
+    except KeyboardInterrupt:
+        # Ctrl+Cが押されたらループを抜ける
+        break
+
+# WebSocket接続を閉じる
+ws.close()
