@@ -27,12 +27,11 @@ def handle_connect():
     print(f'connect: {request.sid}')
 
 
-async def send_data_to_server(data,url):
-
-    
+async def send_data_to_server(data,url):  
+    print("きた")
     if not audio_buffer:
         return jsonify({'volume': 0, 'frequency': 0})
-    # # バッファ内のデータの平均値を計算
+    # バッファ内のデータの平均値を計算
     volume_avg = np.mean([data['volume'] for data in audio_buffer])
     frequency_avg = np.mean([data['frequency'] for data in audio_buffer])
     data = {'volume': volume_avg, 'frequency': frequency_avg}
@@ -40,6 +39,13 @@ async def send_data_to_server(data,url):
         
         await websocket.send(json.dumps(data))
 
+async def send_data_to_both_servers(audio_buffer):
+    url2 = "ws://localhost:8765"
+    url1 = "wss://apparent-raccoon-close.ngrok-free.app/socket.io"
+    await asyncio.gather(
+        send_data_to_server(audio_buffer, url1),
+        send_data_to_server(audio_buffer, url2)
+    )
 
 
 @socketio.on('audio_data')
@@ -61,8 +67,8 @@ def handle_message(audio_data):
 
     if data_count >= 60:
         data_count = 0
-        url = "wss://apparent-raccoon-close.ngrok-free.app/socket.io"
-        asyncio.run(send_data_to_server(audio_buffer,url))
+        asyncio.run(send_data_to_both_servers(audio_buffer))
+
         
 
 
