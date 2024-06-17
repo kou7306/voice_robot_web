@@ -1,19 +1,17 @@
-# Use the official Python image
-FROM python
+FROM python:3.7.4
 
-# Set the working directory
 WORKDIR /app
+ADD . /app
 
-# Copy the requirements file to the working directory
-COPY requirements.txt .
+RUN apt-get update && apt-get clean;
 
-RUN pip install --upgrade pip
-
-# Install any dependencies
 RUN pip install -r requirements.txt
 
-# Copy the rest of the application code to the working directory
-COPY . .
+ENV TZ = "Asia/Tokyo"
+ENV FLASK_APP /app/app.py
+ENV PYTHONPATH $PYTHONPATH:/app
 
-# Run the Flask app with Flask-SocketIO
+ENV PORT 8080
+EXPOSE 8080
+
 CMD ["python", "app.py"]
