@@ -192,6 +192,26 @@
         console.log("Send to server:", data);
         socket.emit("audio_data", data);
       }
+
+      function checkGoal() {
+        fetch("https://earwig-oriented-flamingo.ngrok-free.app/check_goal")
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.goal_reached) {
+              console.log("Goal reached!");
+              window.location.href =
+                "https://earwig-oriented-flamingo.ngrok-free.app/goal_html";
+            } else {
+              console.log("Goal not reached yet");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+
+      // 1秒ごとにAPIを呼び出してチェックする
+      setInterval(checkGoal, 1000);
     </script>
   </body>
 </html>
