@@ -20,7 +20,7 @@ data_count = 0
 @app.route('/')
 def index():
     # return send_from_directory('static', 'index.html') # staticフォルダのindex.html
-    return render_template('web.html') # templateフォルダのindex.html
+    return render_template('index.html') # templateフォルダのindex.html
 
 @socketio.on('connect')
 def handle_connect():
