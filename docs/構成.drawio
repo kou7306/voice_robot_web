@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="alO_7fKV_GwF8pbm1hWU" name="ページ1">
-        <mxGraphModel dx="2489" dy="2249" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="none" math="0" shadow="0">
+        <mxGraphModel dx="1876" dy="1851" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="none" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -64,14 +64,14 @@
                 <mxCell id="21" value="" style="rounded=0;whiteSpace=wrap;html=1;fontSize=25;fillColor=none;strokeColor=#007FFF;" vertex="1" parent="1">
                     <mxGeometry x="-137.5" y="180" width="355" height="210" as="geometry"/>
                 </mxCell>
-                <mxCell id="22" value="Flask" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=25;" vertex="1" parent="1">
-                    <mxGeometry x="-110" y="140" width="60" height="30" as="geometry"/>
+                <mxCell id="22" value="&lt;font style=&quot;font-size: 25px;&quot;&gt;Flask(ngrokでデプロイ)&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=25;" vertex="1" parent="1">
+                    <mxGeometry x="-160" y="150" width="320" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="32" style="edgeStyle=none;html=1;strokeWidth=3;fontSize=16;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="24" target="2">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="24" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Goal判定を行うカメラを持つPC&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fontSize=25;fillColor=default;" vertex="1" parent="1">
-                    <mxGeometry x="190" y="-50" width="193" height="60" as="geometry"/>
+                <mxCell id="24" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Goal判定を行うカメラを持つPC（Goal地点に置いておく）&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fontSize=25;fillColor=default;" vertex="1" parent="1">
+                    <mxGeometry x="190" y="-80" width="220" height="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="25" value="QRコード" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
                     <mxGeometry x="373" y="170" width="80" height="30" as="geometry"/>
@@ -91,14 +91,11 @@
                 <mxCell id="30" value="ロボットのPCの背面にあるQRコードを認識" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
                     <mxGeometry x="360" y="50" width="190" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="33" value="APIを叩き、Goalフラグを立てる" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
+                <mxCell id="33" value="QRコードのAPIを叩き、Goalフラグを立てる" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
                     <mxGeometry x="25" y="60" width="190" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="34" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;一定間隔でGoalフラグを監視し、フラグが立ったらリダイレクト&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
                     <mxGeometry x="-43" y="210" width="180" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="38" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;ngrokでデプロイ&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
-                    <mxGeometry x="-50" y="400" width="140" height="30" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
