@@ -71,8 +71,11 @@ async def send_data_to_both_servers(audio_buffer):
 
 @socketio.on('audio_data')
 def handle_message(audio_data):
+
     # print(f'audio_data: {audio_data}')
-    global audio_buffer, data_count
+    global audio_buffer, data_count,goal_reached
+    if goal_reached:
+        return
 
      # バッファに新しいデータを追加
     audio_buffer.append(audio_data)
