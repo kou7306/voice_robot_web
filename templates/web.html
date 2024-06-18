@@ -45,7 +45,7 @@
       </div>
       <div class="text-center">
         <button
-          id="startButton"
+          id="startStopButton"
           class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
         >
           Start
@@ -56,8 +56,10 @@
     <script>
       let audioContext;
       let analyser;
+      let isRecording = false;
+      let animationId;
 
-      const startButton = document.getElementById("startButton");
+      const startStopButton = document.getElementById("startStopButton");
       const canvas = document.getElementById("waveform");
       const canvasContext = canvas.getContext("2d");
       const volumeDisplay = document.getElementById("volume");
@@ -71,21 +73,26 @@
       socket.on("connect", () => {
         console.log("connect");
       });
-      startButton.addEventListener("click", startAudioVisualizer);
-
-      // 接続が確立されたときに呼び出されるイベント
-      socket.io.on("connect", function () {
-        console.log("Connected to server");
-        socket.emit("server_echo", { data: "client connected!" });
-      });
+      startStopButton.addEventListener("click", toggleRecording);
 
       // サーバーからのメッセージを受信したときに呼び出されるイベント
       socket.on("broadcast_audio_data", function (data) {
         console.log("Received from server:", data);
       });
 
-      function startAudioVisualizer() {
-        startButton.disabled = true;
+      function toggleRecording() {
+        if (isRecording) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      }
+
+      function startRecording() {
+        isRecording = true;
+        startStopButton.textContent = "Stop";
+        startStopButton.classList.remove("bg-blue-500", "hover:bg-blue-600");
+        startStopButton.classList.add("bg-red-500", "hover:bg-red-600");
 
         audioContext = new AudioContext();
         analyser = audioContext.createAnalyser();
@@ -138,13 +145,15 @@
               frequencyDisplay.textContent = frequency;
               // console.log("周波数:", frequency);
 
-              sendAudioData(volume, frequency);
+              if (isRecording) {
+                sendAudioData(volume, frequency);
+              }
 
               audioContextStateDisplay.textContent = audioContext.state;
               analyserStateDisplay.textContent =
                 analyser.numberOfInputs > 0 ? "Connected" : "Disconnected";
 
-              requestAnimationFrame(draw);
+              animationId = requestAnimationFrame(draw);
             }
 
             draw();
@@ -152,8 +161,27 @@
           .catch((error) => {
             console.error("マイクへのアクセスが拒否されました:", error);
             micStatusDisplay.textContent = "マイクへのアクセスが拒否されました";
-            startButton.disabled = false;
+            isRecording = false;
+            startStopButton.textContent = "Start";
+            startStopButton.classList.remove("bg-red-500", "hover:bg-red-600");
+            startStopButton.classList.add("bg-blue-500", "hover:bg-blue-600");
           });
+      }
+
+      function stopRecording() {
+        isRecording = false;
+        startStopButton.textContent = "Start";
+        startStopButton.classList.remove("bg-red-500", "hover:bg-red-600");
+        startStopButton.classList.add("bg-blue-500", "hover:bg-blue-600");
+
+        if (audioContext && audioContext.state !== "closed") {
+          audioContext.close();
+        }
+
+        cancelAnimationFrame(animationId);
+        micStatusDisplay.textContent = "マイクから切断されました";
+        audioContextStateDisplay.textContent = "";
+        analyserStateDisplay.textContent = "";
       }
 
       function sendAudioData(volume, frequency) {
@@ -161,6 +189,7 @@
           volume: volume,
           frequency: frequency,
         };
+        console.log("Send to server:", data);
         socket.emit("audio_data", data);
       }
     </script>
