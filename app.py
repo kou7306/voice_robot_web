@@ -12,7 +12,7 @@ app = Flask(__name__, static_folder='static', static_url_path='/')
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app, cors_allowed_origins="*", max_http_buffer_size=1000000)
 CORS(app, supports_credentials=True, responses={r"/*": {"origins": "*"}})
-buffer_size = 60  # バッファサイズ
+buffer_size = 6  # バッファサイズ
 audio_buffer = []  # 音声データのバッファ
 data_count = 0
 
@@ -28,13 +28,12 @@ def handle_connect():
     # 接続されたクライアントにメッセージを送信s
 
 
-async def send_data_to_server(data,url):  
-    print("きた")
-    if not audio_buffer:
+async def send_data_to_server(datas,url):  
+    if not datas:
         return jsonify({'volume': 0, 'frequency': 0})
     # バッファ内のデータの平均値を計算
-    volume_avg = np.mean([data['volume'] for data in audio_buffer])
-    frequency_avg = np.mean([data['frequency'] for data in audio_buffer])
+    volume_avg = np.mean([data['volume'] for data in datas])
+    frequency_avg = np.mean([data['frequency'] for data in datas])
     data = {'volume': volume_avg, 'frequency': frequency_avg}
     async with websockets.connect(url) as websocket:
         
@@ -42,10 +41,12 @@ async def send_data_to_server(data,url):
 
 async def send_data_to_both_servers(audio_buffer):
     url2 = "ws://localhost:8765"
-    url1 = "wss://apparent-raccoon-close.ngrok-free.app/socket.io"
+    # url1 = "wss://apparent-raccoon-close.ngrok-free.app/socket.io"
+    url3= "wss://romantic-rooster-assured.ngrok-free.app/socket.io"
     await asyncio.gather(
-        send_data_to_server(audio_buffer, url1),
-        send_data_to_server(audio_buffer, url2)
+        # send_data_to_server(audio_buffer, url1),
+        send_data_to_server(audio_buffer, url2),
+        send_data_to_server(audio_buffer, url3)
     )
 
 
@@ -64,10 +65,11 @@ def handle_message(audio_data):
         audio_buffer.pop(0)
 
     # 受け取ったデータを接続されている全てのクライアントにブロードキャスト
-    emit('broadcast_audio_data', audio_data, broadcast=True)
+    # emit('broadcast_audio_data', audio_data, broadcast=True)
 
-    if data_count >= 60:
+    if data_count >= buffer_size:
         data_count = 0
+        print(audio_buffer)
         asyncio.run(send_data_to_both_servers(audio_buffer))
 
         
