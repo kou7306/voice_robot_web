@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_from_directory,jsonify
+from flask import Flask, redirect, request, render_template, send_from_directory,jsonify, url_for
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import numpy as np
@@ -15,12 +15,29 @@ CORS(app, supports_credentials=True, responses={r"/*": {"origins": "*"}})
 buffer_size = 20  # バッファサイズ
 audio_buffer = []  # 音声データのバッファ
 data_count = 0
+goal_reached = False
 
 
 @app.route('/')
 def index():
     # return send_from_directory('static', 'index.html') # staticフォルダのindex.html
     return render_template('index.html') # templateフォルダのindex.html
+
+@app.route('/check_goal')
+def check_goal():
+    global goal_reached
+    return jsonify({'goal_reached': goal_reached})
+
+@app.route('/goal_html')
+def goal_html():
+    return render_template('goal.html')
+
+@app.route('/goal')
+def set_goal_reached():
+    print('Goal reached!')
+    global goal_reached
+    goal_reached = True
+    return jsonify({'message': 'Goal set to reached'})
 
 @socketio.on('connect')
 def handle_connect():
