@@ -12,6 +12,30 @@
       <h1 class="text-3xl font-bold mb-4 text-center">
         マイク入力の可視化(いい感じのタイトルにあとで変更)
       </h1>
+      <form id="webSocketForm" class="text-center mb-4">
+        <div id="urlContainer">
+          <input
+            type="text"
+            placeholder="Enter WebSocket URL"
+            class="webSocketURL border rounded py-2 px-4 mb-2"
+            value="ws://100.70.4.41:5002"
+          />
+        </div>
+        <button
+          type="button"
+          id="addUrlButton"
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mb-4"
+        >
+          Add URL
+        </button>
+        <button
+          type="submit"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        >
+          Connect
+        </button>
+      </form>
+
       <div class="flex justify-center mb-4">
         <canvas
           id="waveform"
@@ -53,6 +77,7 @@
       </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='scripts/form.js') }}"></script>
     <script>
       let audioContext;
       let analyser;
