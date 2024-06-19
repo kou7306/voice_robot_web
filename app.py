@@ -16,6 +16,7 @@ buffer_size = 20  # バッファサイズ
 audio_buffer = []  # 音声データのバッファ
 data_count = 0
 goal_reached = False
+robot_urls=[]
 
 
 @app.route('/')
@@ -57,24 +58,18 @@ async def send_data_to_server(datas,url):
         
         await websocket.send(json.dumps(data))
 
-async def send_data_to_both_servers(audio_buffer):
-    url2 = "ws://localhost:8765"
-    url4 = "ws://100.70.4.41:5002"
-    # url1 = "wss://apparent-raccoon-close.ngrok-free.app/socket.io"
-    # url3= "wss://romantic-rooster-assured.ngrok-free.app/socket.io"
-    await asyncio.gather(
-        # send_data_to_server(audio_buffer, url1),
-        send_data_to_server(audio_buffer, url2),
-        send_data_to_server(audio_buffer, url4)
-        # send_data_to_server(audio_buffer, url3)
-    )
+async def send_data_to_both_servers(audio_buffer, urls):
+    tasks = []
+    for url in urls:
+        tasks.append(send_data_to_server(audio_buffer, url))
+    await asyncio.gather(*tasks)
 
 
 @socketio.on('audio_data')
 def handle_message(audio_data):
 
     # print(f'audio_data: {audio_data}')
-    global audio_buffer, data_count,goal_reached
+    global audio_buffer, data_count,goal_reached,robot_urls
     if goal_reached:
         return
 
@@ -88,18 +83,25 @@ def handle_message(audio_data):
     if len(audio_buffer) > buffer_size:
         audio_buffer.pop(0)
 
-    # 受け取ったデータを接続されている全てのクライアントにブロードキャスト
-    # emit('broadcast_audio_data', audio_data, broadcast=True)
-
     if data_count >= buffer_size:
         data_count = 0
-        # print(audio_buffer)
-        asyncio.run(send_data_to_both_servers(audio_buffer))
+        asyncio.run(send_data_to_both_servers(audio_buffer,robot_urls))
 
         
 
-
-
+@app.route('/submit_url', methods=['POST'])
+def submit_websocket_urls():
+    try:
+        global robot_urls
+        data = request.get_json()
+        urls = data.get('urls', [])
+        # ここでURLを処理するコードを追加します
+        for url in urls:
+            if url != "":
+                robot_urls.append(url)
+        return jsonify({"message": "WebSocket URLs received successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 if __name__ == '__main__':
     socketio.run(app,host='0.0.0.0', port=8080)
