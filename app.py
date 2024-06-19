@@ -21,7 +21,6 @@ robot_urls=[]
 
 @app.route('/')
 def index():
-    # return send_from_directory('static', 'index.html') # staticフォルダのindex.html
     return render_template('index.html') # templateフォルダのindex.html
 
 @app.route('/check_goal')
