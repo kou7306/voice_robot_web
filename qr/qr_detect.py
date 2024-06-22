@@ -2,6 +2,7 @@ import cv2
 from pyzbar.pyzbar import decode
 import numpy as np
 import requests
+import time
 
 def detect_qr_code(image):
     decoded_objects = decode(image)
@@ -35,9 +36,15 @@ def main():
             print(f"Detected QR Code: {qr_data}, Distance: {distance:.2f} cm")
 
             if distance < 50:  # 例えば50cm以内
-                print("Goal reached!")
-                send_get_request(qr_data)
-                break
+                print(qr_data)
+                while True:
+                    try:
+                        send_get_request(qr_data)
+                        break  # リクエストが成功したらループを抜ける
+                    except Exception as e:
+                        print(f"Failed to send request: {e}")
+                        print("Retrying in {} seconds...".format(1))
+                        time.sleep(1)
 
         cv2.imshow('QR Code Detector', frame)
 

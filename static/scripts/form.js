@@ -16,7 +16,7 @@ webSocketForm.addEventListener("submit", function (event) {
     document.querySelectorAll(".webSocketURL")
   ).map((input) => input.value);
 
-  fetch("https://earwig-oriented-flamingo.ngrok-free.app/submit_url", {
+  fetch("http://localhost:8080/submit_url", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
