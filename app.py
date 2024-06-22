@@ -16,8 +16,9 @@ buffer_size = 20  # バッファサイズ
 audio_buffer = []  # 音声データのバッファ
 data_count = 0
 goal_reached = False
-robot_urls=[]
-
+robot_urls=["ws://100.70.4.41:5002","ws://100.112.17.4:5002"]
+# "ws://100.70.4.41:5002"
+# "ws://100.112.17.4:5002"
 
 @app.route('/')
 def index():
@@ -26,6 +27,7 @@ def index():
 @app.route('/check_goal')
 def check_goal():
     global goal_reached
+    print(goal_reached)
     return jsonify({'goal_reached': goal_reached})
 
 @app.route('/goal_html')
@@ -60,14 +62,13 @@ async def send_data_to_server(datas,url):
 async def send_data_to_both_servers(audio_buffer, urls):
     tasks = []
     for url in urls:
+        print(f"Sending data to {url}")
         tasks.append(send_data_to_server(audio_buffer, url))
     await asyncio.gather(*tasks)
 
 
 @socketio.on('audio_data')
 def handle_message(audio_data):
-
-    # print(f'audio_data: {audio_data}')
     global audio_buffer, data_count,goal_reached,robot_urls
     if goal_reached:
         return
@@ -104,5 +105,3 @@ def submit_websocket_urls():
     
 if __name__ == '__main__':
     socketio.run(app,host='0.0.0.0', port=8080)
-    
-# ngrok http --domain=apparent-raccoon-close.ngrok-free.app 5002
