@@ -16,9 +16,11 @@ buffer_size = 20  # バッファサイズ
 audio_buffer = []  # 音声データのバッファ
 data_count = 0
 goal_reached = False
-robot_urls=["ws://100.70.4.41:5002","ws://100.112.17.4:5002"]
+robot_urls=["ws://100.70.4.41:5002","ws://100.112.17.4:5002","ws://100.73.85.118:5002"]
 # "ws://100.70.4.41:5002"
 # "ws://100.112.17.4:5002"
+# "ws://100.73.85.118:5002"
+# "ws://localhost:8765"
 
 @app.route('/')
 def index():
@@ -37,6 +39,7 @@ def goal_html():
 def set_goal_reached():
     print('Goal reached!')
     global goal_reached
+    asyncio.run(send_data_to_both_servers([],robot_urls))
     goal_reached = True
     return jsonify({'message': 'Goal set to reached'})
 
@@ -47,15 +50,21 @@ def handle_connect():
 
 async def send_data_to_server(datas,url):  
     if datas==[]:
+        print("No data in buffer")
         data = {'volume': 0, 'frequency': 0}
+        async with websockets.connect(url) as websocket:
+            for _ in range(6):  # 1秒間に6回送信
+                await websocket.send(json.dumps(data))
+                await asyncio.sleep(1/6)  # 1秒を6回に分割
     else: 
         # バッファ内のデータの平均値を計算
         volume_avg = np.mean([data['volume'] for data in datas])
         frequency_avg = np.mean([data['frequency'] for data in datas])
         data = {'volume': volume_avg, 'frequency': frequency_avg}
 
-    async with websockets.connect(url) as websocket:        
-        await websocket.send(json.dumps(data))
+        async with websockets.connect(url) as websocket:  
+            print(data)      
+            await websocket.send(json.dumps(data))
 
 async def send_data_to_both_servers(audio_buffer, urls):
     tasks = []
@@ -70,7 +79,11 @@ def handle_message(audio_data):
     global audio_buffer, data_count,goal_reached,robot_urls
     if goal_reached:
         return
-    print(audio_data)
+    # print(audio_data)
+    if(audio_data['volume'] == -1 and audio_data['frequency'] == -1):
+        audio_buffer = []
+        print("Reset buffer")
+        asyncio.run(send_data_to_both_servers(audio_buffer,robot_urls))
 
      # バッファに新しいデータを追加
     audio_buffer.append(audio_data)
@@ -84,8 +97,6 @@ def handle_message(audio_data):
 
     if data_count >= buffer_size:
         data_count = 0
-        if(audio_data['volume'] == -1 and audio_data['frequency'] == -1):
-            audio_buffer = []
         asyncio.run(send_data_to_both_servers(audio_buffer,robot_urls))
 
         
